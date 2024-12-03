@@ -20,8 +20,41 @@ fn part_one(input: &String) -> i32 {
         }
     });
 
-    println!("Safe reports: {}", safe_reports);
     safe_reports
+}
+
+fn part_two(input: &String) -> i32 {
+    input
+        .lines()
+        .filter_map(|line| {
+            let report: Vec<i32> = line
+                .split_whitespace()
+                .filter_map(|num| num.parse::<i32>().ok())
+                .collect();
+
+            // Check if the report is safe using `problem_dampener`
+            problem_dampener(&report).map(|(is_safe, _)| is_safe)
+        })
+        .filter(|&is_safe| is_safe)
+        .count() as i32
+}
+
+fn problem_dampener(sequence: &[i32]) -> Option<(bool, Option<usize>)> {
+    // Check if the sequence is already safe
+    if is_sequence_safe(sequence) {
+        return Some((true, None)); // Safe without removing any level
+    }
+
+    // Try removing each level (except the first and last) to see if it makes the sequence safe
+    for i in 1..sequence.len() - 1 {
+        let mut modified_sequence = sequence.to_vec();
+        modified_sequence.remove(i); // Remove the level at index `i`
+        if is_sequence_safe(&modified_sequence) {
+            return Some((true, Some(i))); // Safe by removing the level at index `i`
+        }
+    }
+
+    Some((false, None)) // Unsafe regardless of which level is removed
 }
 
 // BRUH its only day 2
@@ -52,22 +85,15 @@ fn is_sequence_safe(sequence: &[i32]) -> bool {
 
 fn main() -> Result<(), std::io::Error> {
     let input = read_input("./src/day_2/input.txt")?; // LMAO DELETE WHITE SPACE IN INPUT.TXT FILE
-    // let input = test_input();
-    part_one(&input);
+                                                      // let input = test_input();
+
+    let part_one_result = part_one(&input);
+    let part_two_result = part_two(&input);
+
+    println!("Part One: {}", part_one_result);
+    println!("Part Two: {}", part_two_result);
 
     Ok(())
-}
-
-pub fn test_input() -> String {
-    let input = "7 6 4 2 1
-1 2 7 8 9
-9 7 6 2 1
-1 3 2 4 5
-8 6 4 4 1
-1 3 6 7 9"
-        .to_string();
-
-    input.to_string()
 }
 
 #[cfg(test)]
@@ -82,9 +108,38 @@ mod tests {
     }
 
     #[test]
-    fn test_part_one_puzzle_input() { // verify with puzzle input
+    fn test_part_one_puzzle_input() {
+        // verify with puzzle input
         let input = read_input("./src/day_2/input.txt").unwrap();
         let result = part_one(&input);
         assert_eq!(result, 314);
     }
+
+    #[test]
+    fn test_part_two() {
+        let input = test_input();
+        let result = part_two(&input);
+
+        assert_eq!(result, 4);
+    }
+
+    #[test]
+    fn test_part_two_puzzle_input() {
+        // verify with puzzle input
+        let input = read_input("./src/day_2/input.txt").unwrap();
+        let result = part_two(&input);
+        assert_eq!(result, 0);
+    }
+}
+
+pub fn test_input() -> String {
+    let input = "7 6 4 2 1
+1 2 7 8 9
+9 7 6 2 1
+1 3 2 4 5
+8 6 4 4 1
+1 3 6 7 9"
+        .to_string();
+
+    input.to_string()
 }
